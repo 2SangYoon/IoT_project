@@ -1,0 +1,187 @@
+[
+    {
+        "id": "c328be5208bddb2e",
+        "type": "tab",
+        "label": "플로우 1",
+        "disabled": false,
+        "info": "",
+        "env": []
+    },
+    {
+        "id": "a27bbe70ba7afbf1",
+        "type": "debug",
+        "z": "c328be5208bddb2e",
+        "name": "debug 1",
+        "active": true,
+        "tosidebar": true,
+        "console": true,
+        "tostatus": false,
+        "complete": "payload",
+        "targetType": "msg",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 590,
+        "y": 280,
+        "wires": []
+    },
+    {
+        "id": "f51e20e88be46a5c",
+        "type": "http request",
+        "z": "c328be5208bddb2e",
+        "name": "",
+        "method": "POST",
+        "ret": "obj",
+        "paytoqs": "ignore",
+        "url": "http://localhost:5001/predict",
+        "tls": "",
+        "persist": false,
+        "proxy": "",
+        "insecureHTTPParser": false,
+        "authType": "",
+        "senderr": false,
+        "headers": [],
+        "x": 390,
+        "y": 280,
+        "wires": [
+            [
+                "a27bbe70ba7afbf1",
+                "3a820b16ac5cf9ab"
+            ]
+        ]
+    },
+    {
+        "id": "cec6c6f9eaf86ab4",
+        "type": "function",
+        "z": "c328be5208bddb2e",
+        "name": "function 1",
+        "func": "let data;\n\n// 1. 들어온 데이터가 문자열(JSON 텍스트)이면 오브젝트로 파싱\nif (typeof msg.payload === \"string\") {\n    try {\n        data = JSON.parse(msg.payload);\n    } catch(e) {\n        node.error(\"JSON 파싱 실패: \" + e.message);\n        return null;\n    }\n} else {\n    data = msg.payload;\n}\n\n// 2. 클라이언트가 보낸 base64 이미지 데이터 추출\nlet rawBase64 = data.image;\n\nif (!rawBase64) {\n    node.error(\"데이터에 image 필드가 없습니다.\");\n    return null;\n}\n\n// 3. HTTP POST 요청을 위한 헤더 설정\nmsg.headers = {\n    \"Content-Type\": \"application/json\"\n};\n\n// 4. Flask 서버가 인식할 수 있는 최종 JSON 바디 구성\n// 앞에 'data:image/jpeg;base64,'를 붙여서 넘겨줍니다.\nmsg.payload = {\n    \"image\": \"data:image/jpeg;base64,\" + rawBase64\n};\n\nreturn msg;",
+        "outputs": 1,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 240,
+        "y": 280,
+        "wires": [
+            [
+                "f51e20e88be46a5c"
+            ]
+        ]
+    },
+    {
+        "id": "af1b2317cda9ce50",
+        "type": "websocket in",
+        "z": "c328be5208bddb2e",
+        "name": "",
+        "server": "956d092cc1707cfc",
+        "client": "",
+        "x": 110,
+        "y": 380,
+        "wires": [
+            [
+                "df3413c2c3ba32f4",
+                "cec6c6f9eaf86ab4"
+            ]
+        ]
+    },
+    {
+        "id": "df3413c2c3ba32f4",
+        "type": "debug",
+        "z": "c328be5208bddb2e",
+        "name": "debug 2",
+        "active": true,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "false",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 340,
+        "y": 420,
+        "wires": []
+    },
+    {
+        "id": "3a820b16ac5cf9ab",
+        "type": "ui_text",
+        "z": "c328be5208bddb2e",
+        "group": "04bc76465b666bec",
+        "order": 0,
+        "width": 0,
+        "height": 0,
+        "name": "",
+        "label": "Detection Result",
+        "format": "{{msg.payload.result}}",
+        "layout": "row-spread",
+        "className": "",
+        "style": false,
+        "font": "",
+        "fontSize": 16,
+        "color": "#000000",
+        "x": 600,
+        "y": 320,
+        "wires": []
+    },
+    {
+        "id": "6282bce259d96cbd",
+        "type": "inject",
+        "z": "c328be5208bddb2e",
+        "name": "",
+        "props": [
+            {
+                "p": "payload"
+            },
+            {
+                "p": "topic",
+                "vt": "str"
+            }
+        ],
+        "repeat": "",
+        "crontab": "",
+        "once": false,
+        "onceDelay": 0.1,
+        "topic": "",
+        "payload": "",
+        "payloadType": "date",
+        "x": 120,
+        "y": 160,
+        "wires": [
+            [
+                "cec6c6f9eaf86ab4"
+            ]
+        ]
+    },
+    {
+        "id": "956d092cc1707cfc",
+        "type": "websocket-listener",
+        "path": "/image",
+        "wholemsg": "false"
+    },
+    {
+        "id": "04bc76465b666bec",
+        "type": "ui_group",
+        "name": "Result",
+        "tab": "694ef90155aeaf28",
+        "order": 1,
+        "disp": true,
+        "width": 6,
+        "collapse": false,
+        "className": "Result"
+    },
+    {
+        "id": "694ef90155aeaf28",
+        "type": "ui_tab",
+        "name": "Glasses Detection",
+        "icon": "dashboard",
+        "disabled": false,
+        "hidden": false
+    },
+    {
+        "id": "e6964df8736fb15a",
+        "type": "global-config",
+        "env": [],
+        "modules": {
+            "node-red-dashboard": "3.6.6"
+        }
+    }
+]
