@@ -1,0 +1,11 @@
+.venv/
+venv/
+.node-red/
+.flows.json.backup
+__pycache__/
+*.pyc
+*.pyo
+*.log
+runs/
+.pytest_cache/
+.ipynb_checkpoints/

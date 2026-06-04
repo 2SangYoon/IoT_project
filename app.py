@@ -6,13 +6,21 @@ from PIL import Image
 
 app = Flask(__name__)
 
-# YOLOv5 로컬 repo + 모델 로드
+MODEL_PATH = "./glasses_yolov5s_finetuned.pt"
+
+# Load the local YOLOv5 code and the fine-tuned glasses detector.
 model = torch.hub.load(
-    './yolov5',
-    'custom',
-    path='./best.pt',
-    source='local'
+    "./yolov5",
+    "custom",
+    path=MODEL_PATH,
+    source="local",
 )
+model.conf = 0.05
+
+# Keep only the glasses class in YOLOv5 detections.
+# Class index: 0 = no_glasses, 1 = glasses.
+model.classes = [1]
+
 
 @app.route("/predict", methods=["POST"])
 def predict():
@@ -20,25 +28,22 @@ def predict():
         data = request.get_json()
 
         if not data or "image" not in data:
-            return jsonify({
-                "error": "No image field in request"
-            }), 400
+            return jsonify({"error": "No image field in request"}), 400
 
         image_data = data["image"]
 
-        # data:image/jpeg;base64,... 형태면 앞부분 제거
+        # Accept both raw base64 and data URL style payloads.
         if "," in image_data:
-            image_data = image_data.split(",")[1]
+            image_data = image_data.split(",", 1)[1]
 
-        # base64 -> 이미지
         image_bytes = base64.b64decode(image_data)
         image = Image.open(io.BytesIO(image_bytes)).convert("RGB")
 
-        # 추론
         results = model(image)
-
-        # pandas dataframe 형태로 결과 추출
         detections = results.pandas().xyxy[0]
+
+        print("Detections:")
+        print(detections)
 
         wearing_glasses = False
         best_confidence = 0.0
@@ -49,21 +54,17 @@ def predict():
 
             if class_name == "glasses":
                 wearing_glasses = True
-                if conf > best_confidence:
-                    best_confidence = conf
+                best_confidence = max(best_confidence, conf)
 
         return jsonify({
             "result": "glasses" if wearing_glasses else "no_glasses",
             "wearing_glasses": wearing_glasses,
-            "confidence": round(best_confidence, 4)
+            "confidence": round(best_confidence, 4),
         })
 
     except Exception as e:
-        return jsonify({
-            "error": str(e)
-        }), 500
+        return jsonify({"error": str(e)}), 500
 
 
 if __name__ == "__main__":
-    app.run(host="0.0.0.0", port=5001, debug=True)
-
+    app.run(host="0.0.0.0", port=5001, debug=False)

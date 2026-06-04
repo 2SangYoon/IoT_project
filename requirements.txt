@@ -1,0 +1,16 @@
+flask>=3.1
+pillow>=10.3
+torch>=1.8
+torchvision>=0.9
+numpy>=1.23.5
+pandas>=1.1.4
+opencv-python>=4.1.1
+matplotlib>=3.3
+pyyaml>=5.3.1
+requests>=2.32.2
+tqdm>=4.66.3
+gitpython>=3.1.30
+thop>=0.1.1
+seaborn>=0.11.0
+ultralytics>=8.4.47
+websocket-client>=1.8.0
